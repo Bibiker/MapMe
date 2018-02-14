@@ -1,5 +1,0 @@
-idea/
-out/
-target/
-pom.xml
-*.iml
