@@ -2,11 +2,12 @@ package main.java.com.MP.Nikita;
 
 import javax.swing.text.html.HTMLDocument;
 import java.util.*;
+import java.util.function.Consumer;
 
-public class MapMe<K,V> implements Map<K,V> {
+public class MapMe<K, V> implements Map<K, V> {
 
     int size;
-    Entry<K,V> firstEntry, lastEntry;
+    Entry<K, V> firstEntry, lastEntry;
 
     MapMe() {
         this.size = 0;
@@ -69,22 +70,22 @@ public class MapMe<K,V> implements Map<K,V> {
         return (getEntryByValue(value) != null);
     }
 
-    private Entry<K,V> getEntryByValue(Object value) {
-        Entry<K,V> entry = firstEntry,
+    private Entry<K, V> getEntryByValue(Object value) {
+        Entry<K, V> entry = firstEntry,
             reversEntry = lastEntry;
 
         if (this.isEmpty()) return null;
 
         while (entry != null) {
             //Идём с двух сторон по списку
-            if (entry.Value == value)
+            if (entry.Value.equals(value))
                 return entry;
-            if (reversEntry.Value == value)
+            if (reversEntry.Value.equals(value))
                 return reversEntry;
 
             //Если указатели сошлись, то элемент не найден, выврлим null
-            if (entry == reversEntry
-                    || entry.nextEntry == reversEntry)
+            if (entry.equals(reversEntry)
+                    || entry.nextEntry.equals(reversEntry))
                 return null;
 
             entry = entry.nextEntry;
@@ -95,7 +96,8 @@ public class MapMe<K,V> implements Map<K,V> {
 
     @Override
     public V get(Object key) {
-        return getEntryByKey(key).Value;
+        Entry<K, V> entry = getEntryByKey(key);
+        return entry != null ? entry.Value : null;
     }
 
     @Override
@@ -108,7 +110,7 @@ public class MapMe<K,V> implements Map<K,V> {
             return null;
         }
 
-        Entry<K,V> val = getEntryByKey(key);
+        Entry<K, V> val = getEntryByKey(key);
 
         if (val != null) {
             V oldValue = val.Value;
@@ -123,19 +125,19 @@ public class MapMe<K,V> implements Map<K,V> {
         return null;
     }
 
-    private Entry<K,V> getEntryByKey(Object key) {
+    private Entry<K, V> getEntryByKey(Object key) {
         if (isEmpty())
             return null;
 
-        Entry<K,V> entry = firstEntry,
+        Entry<K, V> entry = firstEntry,
                 reversEntry = lastEntry;
 
         while (firstEntry != null){
-            if (entry.Key == key) return entry;
-            if (reversEntry.Key == key) return reversEntry;
+            if (entry.Key.equals(key)) return entry;
+            if (reversEntry.Key.equals(key)) return reversEntry;
 
-            if (entry == reversEntry
-                    || entry.nextEntry == reversEntry)
+            if (entry.equals(reversEntry)
+                    || entry.nextEntry.equals(reversEntry))
                 return null;
 
             entry = entry.nextEntry;
@@ -151,7 +153,7 @@ public class MapMe<K,V> implements Map<K,V> {
             return null;
         }
 
-        Entry<K,V> entry = getEntryByKey(key);
+        Entry<K, V> entry = getEntryByKey(key);
 
         if (entry == null) { return null; }
 
@@ -160,14 +162,14 @@ public class MapMe<K,V> implements Map<K,V> {
         return entry.Value;
     }
 
-    private void deleteEntry(Entry<K,V> entry) throws NullPointerException {
+    private void deleteEntry(Entry<K, V> entry) throws NullPointerException {
 
-        if (entry == firstEntry) {
+        if (entry.equals(firstEntry)) {
             firstEntry = firstEntry.nextEntry;
             firstEntry.prevEntry = null;
             return;
         }
-        if (entry == lastEntry) {
+        if (entry.equals(lastEntry)) {
             lastEntry = lastEntry.prevEntry;
             lastEntry.nextEntry = null;
             return;
@@ -191,33 +193,44 @@ public class MapMe<K,V> implements Map<K,V> {
 
     @Override
     public Set keySet() {
-        Set<K> setofKey = new HashSet<>();
-        Entry<K,V> entry = firstEntry;
-
-        while (entry != null) {
-            setofKey.add(entry.Key);
-            entry = entry.nextEntry;
-        }
-        return setofKey;
+        //TODO
+        return null;
     }
 
     @Override
     public Collection values() {
+        return new ValuesCollection();
+    }
 
-        List<V> listofValues = new ArrayList<>();
-        Entry<K,V> entry = firstEntry;
+    class ValuesCollection extends AbstractCollection<V> {
 
-        while (entry != null) {
-            listofValues.add(entry.Value);
-            entry = entry.nextEntry;
+        @Override
+        public Iterator<V> iterator() {
+            return new ValueIterator();
         }
 
-        return listofValues;
+        @Override
+        public int size() {
+            return size;
+        }
+
+        @Override
+        public void clear() {
+            MapMe.this.clear();
+        }
+
+        @Override
+        public boolean contains(Object object) {
+            return containsValue(object);
+        }
+
+
     }
 
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
-        return new EntrySet();
+        Set<Map.Entry<K, V>> entrySet = new EntrySet();
+        return entrySet;
     }
 
     class EntrySet extends AbstractSet<Map.Entry<K, V>> {
@@ -225,8 +238,8 @@ public class MapMe<K,V> implements Map<K,V> {
         public int size() {
             return size;
         }
-        public void clear() {this.clear(); }
-        public Iterator<Map.Entry<K,V>> iterator() {
+        public void clear() {MapMe.this.clear(); }
+        public Iterator<Map.Entry<K, V>> iterator() {
             return new EntryIterator();
         }
         public boolean contains(Object object) {
@@ -243,9 +256,9 @@ public class MapMe<K,V> implements Map<K,V> {
                 return false;
             }
 
-            Entry<K,V> entry = (Entry<K,V>) object;
-            Object key = ((Entry<K,V>) object).getKey();
-            Entry<K,V> entryFromObject = getEntryByKey(key);
+            Entry<K, V> entry = (Entry<K, V>) object;
+            Object key = ((Entry<K, V>) object).getKey();
+            Entry<K, V> entryFromObject = getEntryByKey(key);
 
             if (entryFromObject != null) {
                 deleteEntry(entryFromObject);
@@ -255,27 +268,33 @@ public class MapMe<K,V> implements Map<K,V> {
             return false;
         }
 
-        public void removeAll() {
-            MapMe.this.clear();
+        public boolean removeAll(Collection<?> collectionToRemove) {
+
+            //TODO (optionaly)
+
+            return false;
         }
     }
 
-    class EntryIterator implements Iterator<Map.Entry<K,V>> {
+    abstract class MyIterator  {
 
         Entry<K, V> entry, entryNext;
 
-        EntryIterator() {
-            entry = firstEntry;
-            entryNext = entry.nextEntry;
+        MyIterator() {
+            entry = null;
+            entryNext = firstEntry;
         }
 
-        @Override
         public boolean hasNext() {
-            return entryNext == null? false : true;
+            return entryNext != null;
         }
 
-        @Override
-        public Map.Entry<K,V> next() {
+        public Map.Entry<K,V> nextEntry() throws NoSuchElementException {
+
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+
             entry = entryNext;
             entryNext = entryNext.nextEntry;
             return entry;
@@ -287,4 +306,23 @@ public class MapMe<K,V> implements Map<K,V> {
             entry = entryNext;
         }
     }
+
+    class EntryIterator extends MyIterator implements Iterator<Map.Entry<K, V>> {
+        public Map.Entry<K, V> next() {
+            return nextEntry();
+        }
+    }
+
+    class KeyIterator extends MyIterator implements Iterator<K> {
+        public K next() {
+            return nextEntry().getKey();
+        }
+    }
+
+    class ValueIterator extends MyIterator implements Iterator<V> {
+        public V next() {
+            return nextEntry().getValue();
+        }
+    }
+
 }
