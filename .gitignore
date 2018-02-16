@@ -1,0 +1,7 @@
+/.idea/
+/out/*
+pom.xml
+*.iml
+/*.xml
+/target
+/src
