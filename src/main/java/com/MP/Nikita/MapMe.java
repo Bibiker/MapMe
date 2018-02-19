@@ -12,7 +12,7 @@ public class MapMe<K, V> implements Map<K, V> {
     private Collection<V> values;
     private EntrySet entrySet;
 
-    MapMe() {
+    public MapMe() {
         this.size = 0;
         this.firstEntry = null;
         this.lastEntry = null;
