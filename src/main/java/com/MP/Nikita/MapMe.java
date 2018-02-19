@@ -1,6 +1,5 @@
 package main.java.com.MP.Nikita;
 
-import javax.swing.text.html.HTMLDocument;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -424,10 +423,11 @@ public class MapMe<K, V> implements Map<K, V> {
             if (entryOfBegin == entryOfEnd || entryOfBegin.nextEntry == entryOfEnd) {
                 return null;
             }
-            if (size % 2 == 0) {
-                size = size >>> 1;
-            } else {
-                size = size >>> 1 + 1;
+            int halfSize = size >>> 1;
+            if (size % 2 == 1) halfSize++;
+
+            if (halfSize <= 1) {
+                return null;
             }
 
             Entry<K, V> curr = entryOfBegin;
@@ -435,9 +435,10 @@ public class MapMe<K, V> implements Map<K, V> {
                 curr = curr.nextEntry;
             }
 
-            //FIX IT!!!
+            Entry<K, V> oldEntryOfBegin = entryOfBegin;
+            entryOfBegin = curr.nextEntry;
 
-            return new MySpliterator<S>(entryOfBegin, entryOfBegin, size);
+            return new MySpliterator<S>(oldEntryOfBegin, curr, halfSize);
         }
 
         @Override
