@@ -1,4 +1,4 @@
-package main.java.com.MP.Nikita;
+package Utils;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -20,8 +20,8 @@ public class MapMe<K, V> implements Map<K, V> {
 
     static class Entry<K,V> implements Map.Entry<K,V> {
 
-        K Key;
-        V Value;
+        private K Key;
+        private V Value;
         Entry<K, V> nextEntry, prevEntry;
 
         public Entry() {
@@ -62,7 +62,7 @@ public class MapMe<K, V> implements Map<K, V> {
 
     @Override
     public boolean containsKey(Object key) {
-        return (get(key) != null);
+        return (getEntryByKey(key) != null);
     }
 
     @Override
@@ -78,9 +78,9 @@ public class MapMe<K, V> implements Map<K, V> {
 
         while (entry != null) {
             //Идём с двух сторон по списку
-            if (entry.Value.equals(value))
+            if (entry.getValue() == value)
                 return entry;
-            if (reversEntry.Value.equals(value))
+            if (reversEntry.getValue() == value)
                 return reversEntry;
 
             //Если указатели сошлись, то элемент не найден, выврлим null
@@ -101,7 +101,8 @@ public class MapMe<K, V> implements Map<K, V> {
     }
 
     @Override
-    public V put(K key, V value) {
+    public V put(K key, V value) throws NullPointerException{
+        if (key == null) { throw new NullPointerException(); }
 
         if (isEmpty()) {
             firstEntry = new Entry<K, V>(key, value, null, null);
@@ -113,8 +114,8 @@ public class MapMe<K, V> implements Map<K, V> {
         Entry<K, V> val = getEntryByKey(key);
 
         if (val != null) {
-            V oldValue = val.Value;
-            val.Value = value;
+            V oldValue = val.getValue();
+            val.setValue(value);
             return oldValue;
         }
 
@@ -125,7 +126,9 @@ public class MapMe<K, V> implements Map<K, V> {
         return null;
     }
 
-    private Entry<K, V> getEntryByKey(Object key) {
+    private Entry<K, V> getEntryByKey(Object key) throws NullPointerException {
+        if (key == null) { throw new NullPointerException(); }
+
         if (isEmpty())
             return null;
 
@@ -133,9 +136,9 @@ public class MapMe<K, V> implements Map<K, V> {
                 reversEntry = lastEntry;
 
         while (entry != null){
-            if (entry.Key.equals(key))
+            if (entry.getKey().equals(key))
                 return entry;
-            if (reversEntry.Key.equals(key))
+            if (reversEntry.getKey().equals(key))
                 return reversEntry;
 
             if (entry.equals(reversEntry)
@@ -163,7 +166,7 @@ public class MapMe<K, V> implements Map<K, V> {
 
         deleteEntry(entry);
         size--;
-        return entry.Value;
+        return entry.getValue();
     }
 
     private void deleteEntry(Entry<K, V> entry) throws NullPointerException {
@@ -184,8 +187,13 @@ public class MapMe<K, V> implements Map<K, V> {
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> m) {
-        //TODO
+    public void putAll(Map<? extends K, ? extends V> m) throws NullPointerException{
+        if (m == null) { throw new NullPointerException(); }
+        if(m == this || m.isEmpty()) { return; }
+
+        for(Map.Entry<? extends K, ? extends V> entry : m.entrySet()) {
+            this.put(entry.getKey(), entry.getValue());
+        }
     }
 
     @Override
@@ -230,7 +238,7 @@ public class MapMe<K, V> implements Map<K, V> {
 
         @Override
         public final boolean remove(Object key) {
-            return MapMe.this.remove(getEntryByKey(key)) != null;
+            return MapMe.this.remove(key) != null;
         }
 
         @Override
@@ -307,9 +315,10 @@ public class MapMe<K, V> implements Map<K, V> {
             }
 
             K key = ((Map.Entry<K, V>) object).getKey();
+            V value = ((Map.Entry<K, V>) object).getValue();
             Entry<K, V> entryFromObject = getEntryByKey(key);
 
-            if (entryFromObject != null) {
+            if (entryFromObject != null && entryFromObject.getValue() == value) {
                 deleteEntry(entryFromObject);
                 size--;
                 return true;
