@@ -279,6 +279,17 @@ public class MapMe<K, V> implements Map<K, V> {
             return containsValue(object);
         }
 
+        @Override
+        public boolean remove(Object object) {
+            Entry<K, V> objectToDelete = getEntryByValue(object);
+            if (objectToDelete != null) {
+                deleteEntry(objectToDelete);
+                size--;
+                return true;
+            }
+            return false;
+        }
+
         //TO DO SPLITERATOR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
 /////////////////////////////////////////////////////////////////////

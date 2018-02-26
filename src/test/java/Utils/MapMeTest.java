@@ -2,10 +2,8 @@ package Utils;
 
 import org.junit.*;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
@@ -181,6 +179,29 @@ public class MapMeTest {
     }
 //ENDCLEAR//////////////////////////////////////////
 
+//ISEMPTY
+
+    @Test
+    public void test_isEmpty() {
+        assertEquals(mapIntStr.isEmpty(), mapIntStrCONTROL.isEmpty());
+    }
+
+    @Test
+    public void test_isEmpty_justOneElement() {
+        mapIntStr.clear();
+        mapIntStrCONTROL.clear();
+
+        Integer inputInt = 5;
+        String inputStr = "str";
+
+        mapIntStr.put(inputInt, inputStr);
+        mapIntStrCONTROL.put(inputInt, inputStr);
+
+        assertEquals(mapIntStr.isEmpty(), mapIntStrCONTROL.isEmpty());
+    }
+
+//ENDISEMPTY////////////////////////////////////////
+
 //KEYSET
     @Test
     public void test_keySet() {
@@ -294,5 +315,106 @@ public class MapMeTest {
     }
 //ENDENTRYSET///////////////////////////////////////
 
+//VALUES////////////////////////////////////////////
 
+    @Test
+    public void test_values() {
+        Collection<String> values = mapIntStr.values();
+        Collection<String> valuesCONTROL = mapIntStrCONTROL.values();
+
+        assertTrue(values.containsAll(valuesCONTROL));
+        assertTrue(valuesCONTROL.containsAll(values));
+    }
+
+    @Test
+    public void test_values_put() {
+        Collection<String> values = mapIntStr.values();
+        Collection<String> valuesCONTROL = mapIntStrCONTROL.values();
+
+        Integer inputInt = 1444;
+        String inputStr = "input String";
+        mapIntStr.put(inputInt, inputStr);
+        mapIntStrCONTROL.put(inputInt, inputStr);
+
+        assertEquals(6, values.size());
+        assertTrue(values.containsAll(valuesCONTROL));
+        assertTrue(valuesCONTROL.containsAll(values));
+    }
+
+    @Test
+    public void test_values_removeFromCollection() {
+        Collection<String> values = mapIntStr.values();
+        Collection<String> valuesCONTROL = mapIntStrCONTROL.values();
+
+        values.remove("");
+        valuesCONTROL.remove("");
+
+        Object[] arr = values.toArray();
+        Object[] arr2 = valuesCONTROL.toArray();
+
+        assertEquals(4, values.size());
+        assertTrue(values.containsAll(valuesCONTROL));
+        assertTrue(valuesCONTROL.containsAll(values));
+    }
+
+    @Test
+    public void test_values_removeFromMap() {
+        Collection<String> values = mapIntStr.values();
+        Collection<String> valuesCONTROL = mapIntStrCONTROL.values();
+
+        mapIntStr.remove(-2);
+        mapIntStrCONTROL.remove(-2);
+
+        assertEquals(4, values.size());
+        assertTrue(values.containsAll(valuesCONTROL));
+        assertTrue(valuesCONTROL.containsAll(values));
+    }
+
+//ENDVALUES/////////////////////////////////////////
+
+
+    @Test
+    public void test_putting() {
+        long start;
+        long finish;
+
+//        start = System.currentTimeMillis();
+//
+//        for (int i = 0; i < 100_000; i++) {
+//            mapIntStr.put(i, "213");
+//        }
+//        finish = System.currentTimeMillis();
+//
+//        System.out.println("Время заполнения моей мапы: " + (finish - start));
+
+        Map<Integer, String> mapIntStrForSerch = new TreeMap<>();
+
+        for (int i = 0; i < 10_000_000; i++) {
+            mapIntStrCONTROL.put(i, "213");
+        }
+
+        start = System.currentTimeMillis();
+        for (Map.Entry<Integer, String> element : mapIntStrCONTROL.entrySet()){
+            if (element.getValue().length() < 2)  {
+                mapIntStrForSerch.put(element.getKey(), element.getValue());
+            }
+        }
+        finish = System.currentTimeMillis();
+
+        System.out.println("Время заполнения TreeMap: " + (finish - start));
+        System.out.println("Результат выполнения: ");
+        for (Map.Entry<Integer, String> element : mapIntStrForSerch.entrySet()){
+            System.out.println(element.getKey() + ": " + element.getValue());
+        }
+//
+//        start = System.currentTimeMillis();
+//        mapIntStrForSerch.putAll(mapIntStrCONTROL.entrySet().stream().
+//                filter(s -> s.getValue().length() < 2).collect());
+//        finish = System.currentTimeMillis();
+
+    }
+
+
+
+//ENDITERATOR///////////////////////////////////////
 }
