@@ -4,18 +4,29 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class MapMe<K, V> implements Map<K, V> {
+public class MapMe<K, V> extends  AbstractMap<K, V> {
 
     private int size;
     private Entry<K, V> firstEntry, lastEntry;
     private Set<K> keySet;
     private Collection<V> values;
     private EntrySet entrySet;
+    private Comparator<? super K> comparator;
+    private ElementOfTree rootOfTree;
 
     public MapMe() {
         this.size = 0;
         this.firstEntry = null;
         this.lastEntry = null;
+        this.comparator = null;
+    }
+
+    public MapMe(Comparator<? super K> comparator) {
+        this.comparator = comparator;
+    }
+
+    static class ElementOfTree {
+
     }
 
     static class Entry<K,V> implements Map.Entry<K,V> {
@@ -213,7 +224,7 @@ public class MapMe<K, V> implements Map<K, V> {
         return keySet;
     }
 
-/////////////////////////////////////////////////////////////////////
+
     class KeySet extends AbstractSet<K> {
 
         @Override
@@ -243,11 +254,10 @@ public class MapMe<K, V> implements Map<K, V> {
 
         @Override
         public final Spliterator<K> spliterator() {
-            //TO DO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            return null;
+            return new MySpliterator<>(Map.Entry::getKey, firstEntry, lastEntry, size);
         }
     }
-/////////////////////////////////////////////////////////////////////
+
     @Override
     public Collection<V> values() {
         if (values == null) {
@@ -256,7 +266,6 @@ public class MapMe<K, V> implements Map<K, V> {
         return values;
     }
 
-/////////////////////////////////////////////////////////////////////
     class ValuesCollection extends AbstractCollection<V> {
 
         @Override
@@ -290,9 +299,12 @@ public class MapMe<K, V> implements Map<K, V> {
             return false;
         }
 
-        //TO DO SPLITERATOR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        @Override
+        public Spliterator<V> spliterator() {
+            return new MySpliterator<>(Map.Entry::getValue, firstEntry, lastEntry, size);
+        }
     }
-/////////////////////////////////////////////////////////////////////
+
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
         if (entrySet == null) {
@@ -301,7 +313,7 @@ public class MapMe<K, V> implements Map<K, V> {
         return entrySet;
     }
 
-/////////////////////////////////////////////////////////////////////
+
     class EntrySet extends AbstractSet<Map.Entry<K, V>> {
 
         public int size() {
@@ -337,16 +349,18 @@ public class MapMe<K, V> implements Map<K, V> {
             return false;
         }
 
-        //TO DO SPLITERATOR!!!!!!!!!!!!!!!!!!!!
+    @Override
+    public Spliterator<Map.Entry<K, V>> spliterator() {
+        return new MySpliterator<>((a) -> a, firstEntry, lastEntry, size);
+    }
 
-        public boolean removeAll(Collection<?> collectionToRemove) {
+    public boolean removeAll(Collection<?> collectionToRemove) {
 
-            //TODO (optionaly)
+            //(optionaly)
 
             return false;
         }
     }
-/////////////////////////////////////////////////////////////////////
 
     abstract class MyIterator  {
 
@@ -402,17 +416,16 @@ public class MapMe<K, V> implements Map<K, V> {
     class MySpliterator<S> implements Spliterator<S> {
 
         private Entry<K, V> currentEntry,
-                           // lastOfPrevious,
                             entryOfBegin,
                             entryOfEnd;
         private int size;
         private Function<Map.Entry<K, V>, S> mapper;
 
-        MySpliterator(//Entry<K, V> lastOfPrevious,
+        MySpliterator(Function<Map.Entry<K, V>, S> mapper,
                       Entry<K, V> entryOfBegin,
                       Entry<K, V> entryOfEnd,
                       int size) {
-            //this.lastOfPrevious = lastOfPrevious;
+            this.mapper = mapper;
             this.entryOfBegin = currentEntry = entryOfBegin;
             this.entryOfEnd = entryOfEnd;
             this.size = size;
@@ -429,7 +442,7 @@ public class MapMe<K, V> implements Map<K, V> {
                 throw new NullPointerException();
             }
 
-            if (currentEntry == entryOfEnd || currentEntry == null) {
+            if (currentEntry == entryOfEnd.nextEntry || currentEntry == null) {
                 return false;
             }
 
@@ -440,25 +453,26 @@ public class MapMe<K, V> implements Map<K, V> {
 
         @Override
         public Spliterator<S> trySplit() {
+            if (entryOfEnd.nextEntry == null) { return null; }
             if (entryOfBegin == entryOfEnd || entryOfBegin.nextEntry == entryOfEnd) {
                 return null;
             }
             int halfSize = size >>> 1;
-            if (size % 2 == 1) halfSize++;
 
             if (halfSize <= 1) {
                 return null;
             }
 
             Entry<K, V> curr = entryOfBegin;
-            for (int i = 0; i < size; i++) {
+            for (int i = 0; i < halfSize - 1; i++) {
                 curr = curr.nextEntry;
             }
 
+            if (size % 2 == 1) halfSize++;
             Entry<K, V> oldEntryOfBegin = entryOfBegin;
             entryOfBegin = curr.nextEntry;
 
-            return new MySpliterator<S>(oldEntryOfBegin, curr, halfSize);
+            return new MySpliterator<S>(mapper, oldEntryOfBegin, curr, halfSize);
         }
 
         @Override

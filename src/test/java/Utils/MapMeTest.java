@@ -3,7 +3,7 @@ package Utils;
 import org.junit.*;
 
 import java.util.*;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -372,49 +372,36 @@ public class MapMeTest {
 
 //ENDVALUES/////////////////////////////////////////
 
+//SPLITERATOR
 
     @Test
-    public void test_putting() {
-        long start;
-        long finish;
+    public void test_spliterator() {
 
-//        start = System.currentTimeMillis();
-//
-//        for (int i = 0; i < 100_000; i++) {
-//            mapIntStr.put(i, "213");
-//        }
-//        finish = System.currentTimeMillis();
-//
-//        System.out.println("Время заполнения моей мапы: " + (finish - start));
+        final Random random = new Random();
+        List<Map.Entry<Integer, String>> listofResults, listofResultsCONTROL;
+        mapIntStrCONTROL.clear();
+        mapIntStr.clear();
 
-        Map<Integer, String> mapIntStrForSerch = new TreeMap<>();
-
-        for (int i = 0; i < 10_000_000; i++) {
-            mapIntStrCONTROL.put(i, "213");
+        for (int i = 0; i < 100_000; i++) {
+            String inputStr = Integer.toString(random.nextInt());
+            mapIntStr.put(i, inputStr);
+            mapIntStrCONTROL.put(i, inputStr);
         }
 
-        start = System.currentTimeMillis();
-        for (Map.Entry<Integer, String> element : mapIntStrCONTROL.entrySet()){
-            if (element.getValue().length() < 2)  {
-                mapIntStrForSerch.put(element.getKey(), element.getValue());
-            }
-        }
-        finish = System.currentTimeMillis();
+        listofResults = mapIntStr.entrySet().stream().
+                filter(s -> s.getValue().length() == 10).collect(Collectors.toList());
 
-        System.out.println("Время заполнения TreeMap: " + (finish - start));
-        System.out.println("Результат выполнения: ");
-        for (Map.Entry<Integer, String> element : mapIntStrForSerch.entrySet()){
-            System.out.println(element.getKey() + ": " + element.getValue());
-        }
-//
-//        start = System.currentTimeMillis();
-//        mapIntStrForSerch.putAll(mapIntStrCONTROL.entrySet().stream().
-//                filter(s -> s.getValue().length() < 2).collect());
-//        finish = System.currentTimeMillis();
+        listofResultsCONTROL = mapIntStrCONTROL.entrySet().stream().
+                filter(s -> s.getValue().length() == 10).collect(Collectors.toList());
+
+        assertArrayEquals(listofResultsCONTROL.toArray(), listofResults.toArray());
+
+        listofResults = mapIntStr.entrySet().parallelStream().
+                filter(s -> s.getValue().length() == 10).collect(Collectors.toList());
+
+        assertArrayEquals(listofResultsCONTROL.toArray(), listofResults.toArray());
 
     }
 
-
-
-//ENDITERATOR///////////////////////////////////////
+//ENDSPLITERATOR///////////////////////////////////////
 }
