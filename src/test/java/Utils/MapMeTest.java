@@ -57,6 +57,24 @@ public class MapMeTest {
     }
 
     @Test
+    public void test_putWithCompare() {
+        mapIntStrCONTROL.clear();
+        mapIntStr.clear();
+
+        Integer inputInt;
+        String inputStr;
+
+        Random random = new Random();
+        for (int i = 0; i < 100_000; i++) {
+            inputInt = random.nextInt();
+            mapIntStr.put(inputInt, "");
+            mapIntStrCONTROL.put(inputInt, "");
+        }
+
+        assertArrayEquals(mapIntStrCONTROL.entrySet().toArray(), mapIntStr.entrySet().toArray());
+    }
+
+    @Test
     public void test_put() {
         Integer inputInt = 7;
         String inputStr = "name";
@@ -382,10 +400,10 @@ public class MapMeTest {
         mapIntStrCONTROL.clear();
         mapIntStr.clear();
 
-        for (int i = 0; i < 100_000; i++) {
+        for (int i = 0; i < 5_000_000; i++) {
             String inputStr = Integer.toString(random.nextInt());
-            mapIntStr.put(i, inputStr);
-            mapIntStrCONTROL.put(i, inputStr);
+            mapIntStr.put(4_999_999 - i, inputStr);
+            mapIntStrCONTROL.put(4_999_999 - i, inputStr);
         }
 
         listofResults = mapIntStr.entrySet().stream().

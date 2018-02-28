@@ -11,6 +11,7 @@ public class MapMe<K, V> extends  AbstractMap<K, V> {
     private Set<K> keySet;
     private Collection<V> values;
     private EntrySet entrySet;
+
     private Comparator<? super K> comparator;
     private ElementOfTree rootOfTree;
 
@@ -18,15 +19,56 @@ public class MapMe<K, V> extends  AbstractMap<K, V> {
         this.size = 0;
         this.firstEntry = null;
         this.lastEntry = null;
-        this.comparator = null;
+        this.comparator = comparator;
     }
 
     public MapMe(Comparator<? super K> comparator) {
         this.comparator = comparator;
     }
 
-    static class ElementOfTree {
+    private class ElementOfTree {
+        private MapMe.Entry<K, V> entry;
+        ElementOfTree leftElement, rightElement;
 
+        public MapMe.Entry<K, V> getEntry() {
+            return entry;
+        }
+
+        public K getEntryKey() {
+            return entry.getKey();
+        }
+
+        public boolean hasNextLeft() {
+            return leftElement != null;
+        }
+
+        public boolean hasNextRight() {
+            return rightElement != null;
+        }
+
+        public ElementOfTree getLeftElement() {
+            if (this.hasNextLeft()) {
+                return leftElement;
+            }
+            return null;
+        }
+
+        public ElementOfTree getRightElement() {
+            if (this.hasNextRight()) {
+                return rightElement;
+            }
+            return null;
+        }
+    }
+
+    public Comparator<? super K> getComparator() {
+        if (this.comparator == null) {
+            this.comparator = (Comparator<? super K>) (e1, e2) -> {
+                Comparable<? super K> k1 = (Comparable<? super K>) e1;
+                return k1.compareTo(e2);
+            };
+        }
+        return this.comparator;
     }
 
     static class Entry<K,V> implements Map.Entry<K,V> {
@@ -63,6 +105,14 @@ public class MapMe<K, V> extends  AbstractMap<K, V> {
         public boolean equals(Object object) {
             return super.equals(object);
         }
+    }
+
+    public Map.Entry<K, V> getFirstEntry() {
+        return firstEntry;
+    }
+
+    public Map.Entry<K, V> getLastEntry() {
+        return lastEntry;
     }
 
     @Override
@@ -122,26 +172,104 @@ public class MapMe<K, V> extends  AbstractMap<K, V> {
             return null;
         }
 
-        Entry<K, V> val = getEntryByKey(key);
-
-        if (val != null) {
-            V oldValue = val.getValue();
-            val.setValue(value);
-            return oldValue;
+        if (comparator == null) {
+            getComparator();
         }
 
-        Entry<K, V> entry = new Entry<K, V>(key, value, null, lastEntry);
-        lastEntry.nextEntry = entry;
-        lastEntry = entry;
-        size++;
+        boolean isLowerThanFirst = false;
+        boolean isBiggerThanLast = false;
+        if (comparator.compare(lastEntry.getKey(), key) < 0) {
+            isBiggerThanLast = true;
+        }
+
+        if (comparator.compare(firstEntry.getKey(), key) > 0) {
+            isLowerThanFirst = true;
+        }
+
+        if (isLowerThanFirst) {
+            Entry<K, V> entry = new Entry<K, V>(key, value, firstEntry, null);
+            firstEntry.prevEntry = entry;
+            firstEntry = entry;
+            size++;
+            return null;
+        } else if (isBiggerThanLast) {
+            Entry<K, V> entry = new Entry<K, V>(key, value, null, lastEntry);
+            lastEntry.nextEntry = entry;
+            lastEntry = entry;
+            size++;
+            return null;
+        } else {
+
+            Entry<K, V> entry = getFirstOrNear(key);
+            Entry<K, V> entryToAdd;
+
+            if (entry.getKey() == key) {
+                return entry.setValue(value);
+            } else {
+                int cmp = comparator.compare(entry.getKey(), key);
+                if (cmp > 0) {
+                    entryToAdd = new Entry<K, V>(key, value, entry, entry.prevEntry);
+                    entry.prevEntry.nextEntry = entryToAdd;
+                    entry.prevEntry = entryToAdd;
+                    size++;
+                    return null;
+                }
+                if (cmp < 0) {
+                    entryToAdd = new Entry<K, V>(key, value, entry.nextEntry, entry);
+                    entry.nextEntry.prevEntry = entryToAdd;
+                    entry.nextEntry = entryToAdd;
+                    size++;
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Entry<K, V> getFirstOrNear(K key) throws NullPointerException {
+        if (key == null) { throw new NullPointerException(); }
+
+        if (isEmpty()) {
+            return null;
+        }
+
+        Entry<K, V> entry = firstEntry,
+                reversEntry = lastEntry;
+
+        while (entry != null){
+
+            int cmp = comparator.compare(entry.getKey(), key);
+            if (cmp == 0) {
+                return entry;
+            }
+
+            if (cmp < 0) {
+                entry = entry.nextEntry;
+            } else if (cmp > 0) {
+                return entry;
+            }
+
+            cmp = comparator.compare(reversEntry.getKey(), key);
+            if (cmp == 0) {
+                return reversEntry;
+            }
+
+            if (cmp > 0) {
+                reversEntry = reversEntry.prevEntry;
+            } else if (cmp < 0) {
+                return reversEntry;
+            }
+
+        }
         return null;
     }
 
     private Entry<K, V> getEntryByKey(Object key) throws NullPointerException {
         if (key == null) { throw new NullPointerException(); }
 
-        if (isEmpty())
+        if (isEmpty()) {
             return null;
+        }
 
         Entry<K, V> entry = firstEntry,
                 reversEntry = lastEntry;
