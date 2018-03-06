@@ -9,7 +9,8 @@ import static org.junit.Assert.*;
 
 public class MapMeTest {
 
-    private Map<Integer, String> mapIntStr, mapIntStrCONTROL;
+    private static Map<Integer, String> mapIntStr, mapIntStrCONTROL;
+    private static int count = 50_000;
 
     @Before
     public void setUp() {
@@ -19,25 +20,35 @@ public class MapMeTest {
         Integer inputInt;
         String inputStr;
 
-        inputInt = 1; inputStr = "";
-        mapIntStr.put(inputInt, inputStr);
-        mapIntStrCONTROL.put(inputInt, inputStr);
+        Random random = new Random();
+        for (int i = 0; i < count; i++) {
+            inputInt = random.nextInt();
+            mapIntStr.put(inputInt, "");
+            mapIntStrCONTROL.put(inputInt, "");
+        }
 
-        inputInt = 3435; inputStr = null;
-        mapIntStr.put(inputInt, inputStr);
-        mapIntStrCONTROL.put(inputInt, inputStr);
-
-        inputInt = -2; inputStr = "\n";
-        mapIntStr.put(inputInt, inputStr);
-        mapIntStrCONTROL.put(inputInt, inputStr);
-
-        inputInt = 11111111; inputStr = "888";
-        mapIntStr.put(inputInt, inputStr);
-        mapIntStrCONTROL.put(inputInt, inputStr);
-
-        inputInt = 0; inputStr = ".-=";
-        mapIntStr.put(inputInt, inputStr);
-        mapIntStrCONTROL.put(inputInt, inputStr);
+//        Integer inputInt;
+//        String inputStr;
+//
+//        inputInt = 1; inputStr = "";
+//        mapIntStr.put(inputInt, inputStr);
+//        mapIntStrCONTROL.put(inputInt, inputStr);
+//
+//        inputInt = 3435; inputStr = null;
+//        mapIntStr.put(inputInt, inputStr);
+//        mapIntStrCONTROL.put(inputInt, inputStr);
+//
+//        inputInt = -2; inputStr = "\n";
+//        mapIntStr.put(inputInt, inputStr);
+//        mapIntStrCONTROL.put(inputInt, inputStr);
+//
+//        inputInt = 11111111; inputStr = "888";
+//        mapIntStr.put(inputInt, inputStr);
+//        mapIntStrCONTROL.put(inputInt, inputStr);
+//
+//        inputInt = 0; inputStr = ".-=";
+//        mapIntStr.put(inputInt, inputStr);
+//        mapIntStrCONTROL.put(inputInt, inputStr);
 
         assertTrue(mapIntStrCONTROL.equals(mapIntStr));
     }
@@ -67,7 +78,11 @@ public class MapMeTest {
         Random random = new Random();
         for (int i = 0; i < 100_000; i++) {
             inputInt = random.nextInt();
-            mapIntStr.put(inputInt, "");
+            try {
+                mapIntStr.put(inputInt, "");
+            } catch (NullPointerException ex) {
+                return;
+            }
             mapIntStrCONTROL.put(inputInt, "");
         }
 
@@ -236,7 +251,7 @@ public class MapMeTest {
         mapIntStr.put(inputInt, inputStr);
         mapIntStrCONTROL.put(inputInt, inputStr);
 
-        assertEquals(6, setofKeys.size());
+        assertEquals(setofKeysCONTROL.size(), setofKeys.size());
         assertEquals(setofKeysCONTROL, setofKeys);
     }
 
@@ -259,7 +274,7 @@ public class MapMeTest {
         mapIntStr.remove(-2);
         mapIntStrCONTROL.remove(-2);
 
-        assertEquals(4, setofKeys.size());
+        assertEquals(setofKeysCONTROL.size(), setofKeys.size());
         assertEquals(setofKeys, setofKeysCONTROL);
     }
 
@@ -292,7 +307,7 @@ public class MapMeTest {
         mapIntStr.put(inputInt, inputStr);
         mapIntStrCONTROL.put(inputInt, inputStr);
 
-        assertEquals(6, setofEntries.size());
+        assertEquals(setofEntriesCONTROL.size(), setofEntries.size());
         assertEquals(setofEntriesCONTROL, setofEntries);
     }
 
@@ -316,7 +331,7 @@ public class MapMeTest {
         mapIntStr.remove(-2);
         mapIntStrCONTROL.remove(-2);
 
-        assertEquals(4, setofEntries.size());
+        assertEquals(setofEntriesCONTROL.size(), setofEntries.size());
         assertEquals(setofEntriesCONTROL, setofEntries);
     }
 
@@ -354,7 +369,7 @@ public class MapMeTest {
         mapIntStr.put(inputInt, inputStr);
         mapIntStrCONTROL.put(inputInt, inputStr);
 
-        assertEquals(6, values.size());
+        assertEquals(valuesCONTROL.size(), values.size());
         assertTrue(values.containsAll(valuesCONTROL));
         assertTrue(valuesCONTROL.containsAll(values));
     }
@@ -370,7 +385,7 @@ public class MapMeTest {
         Object[] arr = values.toArray();
         Object[] arr2 = valuesCONTROL.toArray();
 
-        assertEquals(4, values.size());
+        assertEquals(valuesCONTROL.size(), values.size());
         assertTrue(values.containsAll(valuesCONTROL));
         assertTrue(valuesCONTROL.containsAll(values));
     }
@@ -383,7 +398,7 @@ public class MapMeTest {
         mapIntStr.remove(-2);
         mapIntStrCONTROL.remove(-2);
 
-        assertEquals(4, values.size());
+        assertEquals(valuesCONTROL.size(), values.size());
         assertTrue(values.containsAll(valuesCONTROL));
         assertTrue(valuesCONTROL.containsAll(values));
     }
@@ -400,10 +415,10 @@ public class MapMeTest {
         mapIntStrCONTROL.clear();
         mapIntStr.clear();
 
-        for (int i = 0; i < 5_000_000; i++) {
+        for (int i = 0; i < 100_000; i++) {
             String inputStr = Integer.toString(random.nextInt());
-            mapIntStr.put(4_999_999 - i, inputStr);
-            mapIntStrCONTROL.put(4_999_999 - i, inputStr);
+            mapIntStr.put(99_999 - i, inputStr);
+            mapIntStrCONTROL.put(99_999 - i, inputStr);
         }
 
         listofResults = mapIntStr.entrySet().stream().
